@@ -1,170 +1,71 @@
-extern crate url;
-// use domain_info::{Domain, Scanner};
-use futures::future::join_all;
-use std::sync::mpsc;
-// use url::Url;
-use std::sync::mpsc::{Receiver, Sender};
-// use std::thread;
-// use std::io::{stderr, Write};
-use std::{thread, time};
+extern crate rand;
 
-// #[tokio::main]
-// pub async fn main() {
-//     println!("wappalyzer_crate");
-//     let url = Url::parse(&String::from("http://google.com")).unwrap();
-//     let res = wappalyzer::scan(url).await;
-//     println!("{:?}", res);
+use rand::seq::SliceRandom;
+use std::collections::HashMap; // 0.7.2
 
-//     println!("domain_info_crate");
-//     let res = Domain::from("google.com").unwrap().scan();
-//     println!("{:?}", res);
-// }
-
-// async fn send_recv() {
-//     // const BUFFER_SIZE: usize = 10;
-//     let (mut tx, mut rx) = mpsc::channel::<i32>();
-
-//     tx.send(1).await.unwrap();
-//     tx.send(2).await.unwrap();
-//     drop(tx);
-
-//     // `StreamExt::next` is similar to `Iterator::next`, but returns a
-//     // type that implements `Future<Output = Option<T>>`.
-//     assert_eq!(Some(1), rx.next().await);
-//     assert_eq!(Some(2), rx.next().await);
-//     assert_eq!(None, rx.next().await);
-// }
-
-// static NTHREADS: i32 = 3;
-
-// fn main() {
-//     // Channels have two endpoints: the `Sender<T>` and the `Receiver<T>`,
-//     // where `T` is the type of the message to be transferred
-//     // (type annotation is superfluous)
-//     let (tx, rx): (Sender<i32>, Receiver<i32>) = mpsc::channel();
-//     let mut children = Vec::new();
-
-//     for id in 0..NTHREADS {
-//         // The sender endpoint can be copied
-//         let thread_tx = tx.clone();
-
-//         // Each thread will send its id via the channel
-//         let child = thread::spawn(move || {
-//             // The thread takes ownership over `thread_tx`
-//             // Each thread queues a message in the channel
-//             thread_tx.send(id).unwrap();
-
-//             // Sending is a non-blocking operation, the thread will continue
-//             // immediately after sending its message
-//             println!("thread {} finished", id);
-//         });
-
-//         children.push(child);
-//     }
-
-//     // Here, all the messages are collected
-//     let mut ids = Vec::with_capacity(NTHREADS as usize);
-//     for _ in 0..NTHREADS {
-//         // The `recv` method picks a message from the channel
-//         // `recv` will block the current thread if there are no messages available
-//         ids.push(rx.recv());
-//     }
-//     // Wait for the threads to complete any remaining work
-//     for child in children {
-//         child.join().expect("oops! the child thread panicked");
-//     }
-
-//     // Show the order in which the messages were sent
-//     println!("{:?}", ids);
-// }
-
-//
-//
-//
-
-async fn start_worker(id: i32, tx: Sender<i32>) {
-    // eprint!("start:{}", id);
-    // let _ = stderr().flush();
-
-    thread::sleep(time::Duration::from_millis((100 * id) as u64));
-
-    tx.send(id).unwrap();
-    // println!("worker {} finished", id);
+macro_rules! s {
+    ($e:expr) => {
+        String::from($e)
+    };
 }
 
-async fn listen(rx: Receiver<i32>) {
-    for _ in 0..NWORKERS {
-        // The `recv` method picks a message from the channel
-        // `recv` will block the current thread if there are no messages available
-        println!("REC'D: {}", rx.recv().unwrap());
+#[derive(Hash, Eq, PartialEq, Debug)]
+struct Room {
+    desc: String,
+}
+
+fn create_rooms() -> Vec<Room> {
+    vec![
+        Room {
+            desc: s!("Front lawn"),
+        },
+        Room { desc: s!("Porch") },
+        Room {
+            desc: s!("Driveway"),
+        },
+    ]
+}
+
+type Map<'a> = HashMap<&'a Room, Vec<&'a Room>>;
+
+fn create_map(rooms: &[Room]) -> Map {
+    let r1 = rooms.get(0).unwrap();
+    let r2 = rooms.get(1).unwrap();
+    let r3 = rooms.get(2).unwrap();
+
+    let mut map = HashMap::new();
+    map.insert(r1, vec![r2, r3]);
+    map.insert(r2, vec![r1, r3]);
+    map.insert(r3, vec![r1]);
+    map
+}
+
+fn rand_room<'a>(
+    map: &'a Map,
+    room: &Room,
+    rng: &mut rand::prelude::ThreadRng,
+) -> Option<&'a Room> {
+    let options = map.get(room).unwrap();
+    if let Some(res) = options.choose(rng) {
+        Some(res)
+    } else {
+        None
     }
 }
 
-static NWORKERS: i32 = 10;
+fn main() {
+    println!("creating map");
+    let mut rng = rand::thread_rng();
 
-#[tokio::main]
-pub async fn main() {
-    // println!("HERE 1");
+    let rooms = create_rooms();
+    let map = create_map(&rooms);
 
-    // Channels have two endpoints: the `Sender<T>` and the `Receiver<T>`,
-    // where `T` is the type of the message to be transferred
-    // (type annotation is superfluous)
-    let (tx, rx): (Sender<i32>, Receiver<i32>) = mpsc::channel();
-    let mut children = Vec::new();
-
-    for id in 0..NWORKERS {
-        // The sender endpoint can be copied
-        let worker_tx = tx.clone();
-        let f = start_worker(id, worker_tx);
-        // println!("HERE 2.{}", id);
-
-        // Each thread will send its id via the channel
-        // let child = thread::spawn(move || {
-        //     // The thread takes ownership over `thread_tx`
-        //     // Each thread queues a message in the channel
-        //     thread_tx.send(id).unwrap();
-
-        //     // Sending is a non-blocking operation, the thread will continue
-        //     // immediately after sending its message
-        //     println!("thread {} finished", id);
-        // });
-
-        children.push(f);
+    let mut maybe_room = rooms.get(0);
+    println!("START at {:?}", maybe_room);
+    for _ in 1..15 {
+        if let Some(curr) = maybe_room {
+            maybe_room = rand_room(&map, &curr, &mut rng);
+            println!("Moved to {:?}", maybe_room);
+        }
     }
-
-    let listen_f = listen(rx);
-    // children.push(listen_f);
-    let sender_fs = join_all(children);
-    let res = futures::join!(sender_fs, listen_f); // NOTE: Order matters!
-
-    // let res = listen(rx).await;
-
-    // Here, all the messages are collected
-    // let mut ids = Vec::with_capacity(NWORKERS as usize);
-    // for _ in 0..NWORKERS {
-    //     // The `recv` method picks a message from the channel
-    //     // `recv` will block the current thread if there are no messages available
-    //     ids.push(rx.recv());
-    // }
-    // // Wait for the threads to complete any remaining work
-    // for child in children {
-    //     // child.join().expect("oops! the child thread panicked");
-    // }
-    // println!("HERE 4");
-
-    println!("{:?}", res);
 }
-
-// let futures = domains
-// .into_iter()
-// .map(|d| async move { Domain(d.0).scan() })
-// .collect::<Vec<_>>();
-// let results = join_all(futures).await;
-// for res in results {
-// if let Ok(output) = match res {
-//     Ok(info) => serde_json::to_string(&info),
-//     Err(err) => serde_json::to_string(&err),
-// } {
-//     println!("{}", output);
-// }
-// }
