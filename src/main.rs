@@ -1,22 +1,20 @@
 extern crate rand;
 
 mod creatures;
-mod map;
+mod game_state;
 mod rooms;
 mod s_macro;
 
+use game_state::GameState;
+
 fn main() {
-    println!("creating map");
-    let mut rng = rand::thread_rng();
+    let mut state = GameState::create_random();
+    let mut maybe_room = state.start_at();
 
-    let rooms = map::create_rooms();
-    let map = map::create_map(&rooms);
-
-    let mut maybe_room = rooms.get(0);
     println!("Starting at {:?}", maybe_room);
     for _ in 1..15 {
         if let Some(curr) = maybe_room {
-            maybe_room = map::rand_room(&map, &curr, &mut rng);
+            maybe_room = state.rand_room(&curr.id);
             println!("Moved to {:?}", maybe_room);
         }
     }
