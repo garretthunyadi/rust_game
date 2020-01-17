@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 #[derive(Hash, Eq, PartialEq, Debug)]
 pub struct Room {
     pub id: String,
-    // pub desc: String,
+    pub desc: String,
 }
 
 impl Room {
