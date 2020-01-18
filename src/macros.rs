@@ -11,3 +11,10 @@ macro_rules! puts {
         println!("{}", $e);
     };
 }
+
+#[macro_export]
+macro_rules! puto {
+    ($e:expr) => {
+        println!("{:?}", $e);
+    };
+}
