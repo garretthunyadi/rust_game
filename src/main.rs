@@ -1,21 +1,21 @@
+#![allow(dead_code)]
 extern crate rand;
 
 mod creatures;
+mod entity_locations;
 mod game_state;
+mod locations;
+mod macros;
+mod maybe;
 mod rooms;
-mod s_macro;
 
-use game_state::GameState;
+use entity_locations::EntityLocation;
+use locations::Locations;
 
 fn main() {
-    let mut state = GameState::create_random();
-    let mut maybe_room = state.start_at();
-
-    println!("Starting at {:?}", maybe_room);
-    // for _ in 1..15 {
-    //     if let Some(curr) = maybe_room {
-    //         maybe_room = state.rand_room(&curr.id);
-    //         println!("Moved to {:?}", maybe_room);
-    //     }
-    // }
+    let map = Locations::new();
+    let mut pos = EntityLocation::new(&map, Some(map.stating()));
+    while pos.next().is_some() {
+        puts!(pos.curr.clone().unwrap());
+    }
 }
