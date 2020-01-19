@@ -33,7 +33,7 @@ fn main() {
     while pos.next().is_some() {
         let p = pos.curr.clone().unwrap();
         puto!(p);
-        log.log(&p.to_string());
+        log.log(&format!("{:?}", p));
     }
 
     puts!("===FIN===");

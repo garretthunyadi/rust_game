@@ -1,5 +1,4 @@
 // use crate::l;
-use crate::l;
 use crate::locations::{Location, Locations};
 use crate::maybe;
 // use crate::s;
@@ -67,7 +66,7 @@ impl<'a> Iterator for EntityLocation<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let options = self
             .locations
-            .destinations_from(&self.curr.clone().unwrap_or_else(|| l!["storage"]));
+            .destinations_from(&self.curr.clone().unwrap_or_else(|| Location::Nowhere));
         match options.choose(&mut self.rng) {
             Some(loc) => {
                 self.curr = Some(loc.clone());

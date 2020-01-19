@@ -1,5 +1,6 @@
 // use crate::s;
 use std::collections::HashMap;
+use std::fmt;
 // use std::marker::PhantomData;
 use crate::rand::prelude::IteratorRandom;
 // use rand::prelude::ThreadRng;
@@ -7,36 +8,42 @@ use crate::rand::prelude::IteratorRandom;
 
 // pub type Location = String;
 #[derive(Hash, Eq, Debug, PartialEq, Clone)]
-pub struct Location(pub String);
-
-impl ToString for Location {
-    fn to_string(&self) -> String {
-        self.0.clone()
-    }
+pub enum Location {
+    Yard,
+    FrontDoor,
+    Garage,
+    Driveway,
+    SideDoor,
+    Nowhere,
 }
+
+// impl ToString for Location {
+//     fn to_string(&self) -> String {
+//         self
+//     }
+// }
+
+// impl fmt::Display for Location {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         write!(f, "{:?}", self)
+//         // or, alternatively:
+//         // fmt::Debug::fmt(self, f)
+//     }
+// }
 
 #[derive(Debug)]
 pub struct Locations {
     map: HashMap<Location, Vec<Location>>,
 }
 
-#[macro_export]
-macro_rules! l {
-    ($name:expr) => {
-        Location(String::from($name))
-    };
-}
-
 impl Locations {
     pub fn new() -> Locations {
+        use Location::*;
         let mut map = HashMap::new();
-        map.insert(l!("driveway"), vec![l!("front_door"), l!("garage")]);
-        map.insert(l!("front_door"), vec![l!("driveway"), l!("garage")]);
-        map.insert(
-            l!("garage"),
-            vec![l!("driveway"), l!("front_door"), l!("side_door")],
-        );
-        map.insert(l!("side_door"), vec![]);
+        map.insert(Yard, vec![FrontDoor, Garage]);
+        map.insert(FrontDoor, vec![Driveway, Garage]);
+        map.insert(Garage, vec![Driveway, FrontDoor, SideDoor]);
+        map.insert(SideDoor, vec![]);
         Locations { map }
     }
 
