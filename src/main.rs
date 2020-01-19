@@ -1,20 +1,13 @@
 #![allow(dead_code)]
 extern crate rand;
 
-mod creatures;
-mod entity_locations;
-mod game_state;
-mod locations;
-mod log;
-mod macros;
-mod maybe;
-mod rooms;
+mod engine;
 
-use creatures::Creature;
-use entity_locations::EntityLocation;
-use locations::Locations;
-use log::Log;
-use rand::prelude::ThreadRng;
+use engine::creature_state::CreatureState;
+use engine::entity_locations::EntityLocation;
+use engine::locations::Locations;
+use engine::log::Log;
+// use rand::prelude::ThreadRng;
 
 fn main() {
     let mut rng = rand::thread_rng();
@@ -38,27 +31,4 @@ fn main() {
 
     puts!("===FIN===");
     puts!(log);
-}
-
-struct CreatureState<'a> {
-    creature: Creature,
-    location: EntityLocation<'a>,
-}
-
-impl<'a> CreatureState<'a> {
-    pub fn new(locations: &'a Locations) -> CreatureState<'a> {
-        CreatureState {
-            creature: Creature::rand(),
-            location: EntityLocation::new(locations, None),
-        }
-    }
-
-    pub fn next(&mut self, rng: &mut ThreadRng) {
-        self.location.move_to(
-            &self
-                .location
-                .rand_next_location_from(rng)
-                .unwrap_or(self.location.locations.default()),
-        );
-    }
 }

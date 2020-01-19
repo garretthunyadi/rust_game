@@ -1,6 +1,6 @@
 // use crate::l;
-use crate::locations::{Location, Locations};
-use crate::maybe;
+use crate::engine::locations::{Location, Locations};
+use crate::engine::maybe;
 // use crate::s;
 use rand::prelude::ThreadRng;
 use rand::seq::SliceRandom;
@@ -59,10 +59,8 @@ impl<'a> EntityLocation<'a> {
 }
 
 impl<'a> Iterator for EntityLocation<'a> {
-    // we will be counting with usize
     type Item = Location;
 
-    // next() is the only required method
     fn next(&mut self) -> Option<Self::Item> {
         let options = self
             .locations

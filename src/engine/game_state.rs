@@ -1,4 +1,4 @@
-use crate::locations::Locations;
+use crate::engine::locations::Locations;
 // use crate::s;
 use rand::prelude::ThreadRng;
 // use rand::seq::SliceRandom;
