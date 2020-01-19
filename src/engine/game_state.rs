@@ -5,8 +5,15 @@ use rand::prelude::ThreadRng;
 // use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct GameState {
-    locations: Locations,
+pub struct GameState<L>
+where
+    L: Clone,
+    L: Eq,
+    L: PartialEq,
+    L: std::fmt::Debug,
+    L: std::hash::Hash,
+{
+    locations: Locations<L>,
     rng: ThreadRng,
 }
 

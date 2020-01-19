@@ -5,13 +5,27 @@ use super::entity_locations::EntityLocation;
 use super::locations::Locations;
 use rand::prelude::ThreadRng;
 
-pub struct CreatureState<'a> {
+pub struct CreatureState<'a, L>
+where
+    L: Clone,
+    L: Eq,
+    L: PartialEq,
+    L: std::fmt::Debug,
+    L: std::hash::Hash,
+{
     pub creature: Creature,
-    pub location: EntityLocation<'a>,
+    pub location: EntityLocation<'a, L>,
 }
 
-impl<'a> CreatureState<'a> {
-    pub fn new(locations: &'a Locations) -> CreatureState<'a> {
+impl<'a, L> CreatureState<'a, L>
+where
+    L: Clone,
+    L: Eq,
+    L: PartialEq,
+    L: std::fmt::Debug,
+    L: std::hash::Hash,
+{
+    pub fn new(locations: &'a Locations<L>) -> CreatureState<'a, L> {
         CreatureState {
             creature: Creature::rand(),
             location: EntityLocation::new(locations, None),
