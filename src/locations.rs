@@ -1,4 +1,4 @@
-use crate::s;
+// use crate::s;
 use std::collections::HashMap;
 // use std::marker::PhantomData;
 use crate::rand::prelude::IteratorRandom;
@@ -7,13 +7,20 @@ use crate::rand::prelude::IteratorRandom;
 
 // pub type Location = String;
 #[derive(Hash, Eq, Debug, PartialEq, Clone)]
-pub struct Location(String);
+pub struct Location(pub String);
+
+impl ToString for Location {
+    fn to_string(&self) -> String {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug)]
 pub struct Locations {
     map: HashMap<Location, Vec<Location>>,
 }
 
+#[macro_export]
 macro_rules! l {
     ($name:expr) => {
         Location(String::from($name))
@@ -33,12 +40,12 @@ impl Locations {
         Locations { map }
     }
 
-    pub fn starting(&self) -> Location {
-        Location::from(*self.map.keys().nth(0).unwrap())
+    pub fn default(&self) -> Location {
+        self.map.keys().nth(0).unwrap().clone()
     }
 
     pub fn rand(&self, rng: &mut rand::prelude::ThreadRng) -> Location {
-        Location::from(*self.map.keys().choose(rng).unwrap())
+        self.map.keys().choose(rng).unwrap().clone()
     }
 
     pub fn destinations_from(&self, id: &Location) -> Vec<Location> {

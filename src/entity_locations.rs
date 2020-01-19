@@ -1,12 +1,14 @@
+// use crate::l;
+use crate::l;
 use crate::locations::{Location, Locations};
 use crate::maybe;
-use crate::s;
+// use crate::s;
 use rand::prelude::ThreadRng;
 use rand::seq::SliceRandom;
 
 #[derive(Debug)]
 pub struct EntityLocation<'a> {
-    locations: &'a Locations,
+    pub locations: &'a Locations,
     rng: ThreadRng,
     pub curr: Option<Location>,
     num_moves: u32,
@@ -38,7 +40,7 @@ impl<'a> EntityLocation<'a> {
             &(self
                 .curr
                 .clone()
-                .or_else(|| Some(self.locations.starting()))
+                .or_else(|| Some(self.locations.default()))
                 .unwrap()),
         );
         match options.choose(rng) {
@@ -65,10 +67,10 @@ impl<'a> Iterator for EntityLocation<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let options = self
             .locations
-            .destinations_from(&self.curr.clone().unwrap_or_else(|| s!["storage"]));
+            .destinations_from(&self.curr.clone().unwrap_or_else(|| l!["storage"]));
         match options.choose(&mut self.rng) {
             Some(loc) => {
-                self.curr = Some(s![loc]);
+                self.curr = Some(loc.clone());
                 self.num_moves += 1;
                 maybe::maybe(&mut self.rng, || println!("visiting: {:?}", loc));
             }

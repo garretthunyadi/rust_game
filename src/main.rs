@@ -20,7 +20,7 @@ fn main() {
     let mut rng = rand::thread_rng();
     let log = Log::new();
     let map = Locations::new();
-    let mut pos = EntityLocation::new(&map, Some(map.starting()));
+    let mut pos = EntityLocation::new(&map, Some(map.default()));
     let mut cs = CreatureState::new(&map);
 
     cs.next(&mut rng);
@@ -32,8 +32,8 @@ fn main() {
 
     while pos.next().is_some() {
         let p = pos.curr.clone().unwrap();
-        puts!(p);
-        log.log(&p);
+        puto!(p);
+        log.log(&p.to_string());
     }
 
     puts!("===FIN===");
@@ -54,7 +54,11 @@ impl<'a> CreatureState<'a> {
     }
 
     pub fn next(&mut self, rng: &mut ThreadRng) {
-        self.location
-            .move_to(&self.location.rand_next_location_from(rng).unwrap());
+        self.location.move_to(
+            &self
+                .location
+                .rand_next_location_from(rng)
+                .unwrap_or(self.location.locations.default()),
+        );
     }
 }
