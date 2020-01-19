@@ -17,6 +17,7 @@ impl Room {
     }
 }
 
+#[derive(Debug)]
 pub struct Rooms<'a> {
     rooms: HashMap<String, Room>,
     phantom: PhantomData<&'a String>,

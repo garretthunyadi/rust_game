@@ -4,6 +4,7 @@ use rand::prelude::ThreadRng;
 // use rand::seq::SliceRandom;
 // use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct GameState {
     locations: Locations,
     rng: ThreadRng,

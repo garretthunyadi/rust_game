@@ -1,11 +1,13 @@
 use crate::s;
 
+#[derive(Debug)]
 pub enum Disposition {
     Friendly,
     Neutral,
     Hostile,
 }
 
+#[derive(Debug)]
 pub enum Species {
     Human,
     Cow,
@@ -13,6 +15,7 @@ pub enum Species {
     Snake,
 }
 
+#[derive(Debug)]
 pub struct Creature {
     name: String,
     disposition: Disposition,
