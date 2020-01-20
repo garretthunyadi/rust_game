@@ -8,6 +8,8 @@ pub mod macros;
 pub mod maybe;
 pub mod rooms;
 
+use rand::prelude::ThreadRng;
+
 pub trait Map<L> {
     fn starting_location() -> L;
     fn rand_location(rng: &mut rand::prelude::ThreadRng) -> L;
@@ -15,39 +17,58 @@ pub trait Map<L> {
     fn rand_connection(&self, rng: &mut rand::prelude::ThreadRng) -> Option<L>;
 }
 
-// impl Iterator for Map<L> {
-//     type Item = L;
+// TODO: I'm not specifying anything about the (L)ocation implementing the map trait.
+// If I try, I get that the trait cannot be made into an object.
+pub struct Creature<L>
+where
+    L: Map<L>,
+    L: Copy,
+{
+    name: String,
+    loc: Option<L>,
+    rng: ThreadRng,
+}
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         None
-//     }
-// }
-// impl<'a, L> Iterator for EntityLocation<'a, L>
-// where
-//     L: Clone,
-//     L: Eq,
-//     L: PartialEq,
-//     L: std::fmt::Debug,
-//     L: std::hash::Hash,
-//     L: crate::engine::locations::Map<L>,
-// {
-//     type Item = L;
+impl<L> Creature<L>
+where
+    L: Map<L>,
+    L: Copy,
+{
+    pub fn new(name: String) -> Creature<L> {
+        Creature {
+            name,
+            loc: None,
+            rng: rand::thread_rng(),
+        }
+    }
+    pub fn place(&mut self, location: L) {
+        self.loc = Some(location);
+    }
+    /// Move to a place that is one move away from the current location
+    pub fn move_randomly(&mut self, rng: &mut rand::prelude::ThreadRng) -> Option<L> {
+        if let Some(l) = self.loc {
+            self.loc = l.rand_connection(rng);
+        }
+        self.loc
+    }
+    pub fn name(&self) -> &String {
+        &self.name
+    }
+    pub fn location(&self) -> Option<L> {
+        self.loc
+    }
+}
+impl<L> Iterator for Creature<L>
+where
+    L: Map<L>,
+    L: Copy,
+{
+    type Item = L;
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         let options = self
-//             .locations
-//             // .destinations_from(&self.curr.clone().unwrap_or_else(|| Location::Nowhere)); //TODO
-//             .destinations_from(&self.curr.clone().unwrap());
-//         match options.choose(&mut self.rng) {
-//             Some(loc) => {
-//                 self.curr = Some(loc.clone());
-//                 self.num_moves += 1;
-//                 maybe::maybe(&mut self.rng, || println!("visiting: {:?}", loc));
-//             }
-//             None => {
-//                 self.curr = None;
-//             }
-//         };
-//         self.curr.clone()
-//     }
-// }
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(l) = self.loc {
+            self.loc = l.rand_connection(&mut self.rng);
+        }
+        self.loc
+    }
+}

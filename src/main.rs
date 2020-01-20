@@ -13,13 +13,13 @@ mod engine;
 // use engine::creature_state::CreatureState;
 // use engine::entity_locations::EntityLocation;
 // use engine::locations::Locations;
-use engine::log::Log;
+// use engine::log::Log;
 use engine::Map;
 
 mod game1 {
     use super::engine::Map;
 
-    #[derive(Hash, Eq, Debug, PartialEq, Clone)]
+    #[derive(Hash, Eq, Debug, PartialEq, Clone, Copy)]
     pub enum Location {
         Yard,
         FrontDoor,
@@ -62,7 +62,7 @@ mod game1 {
         fn rand_connection(&self, rng: &mut rand::prelude::ThreadRng) -> Option<Location> {
             use rand::seq::SliceRandom;
             match self.connections().choose(rng) {
-                Some(l) => Some(l.clone()),
+                Some(&l) => Some(l),
                 None => None,
             }
         }
@@ -72,13 +72,13 @@ mod game1 {
             Location::Nowhere
         }
     }
-    impl Iterator for Location {
-        type Item = Location;
+    // impl Iterator for Location {
+    //     type Item = Location;
 
-        fn next(&mut self) -> Option<Self::Item> {
-            None
-        }
-    }
+    //     fn next(&mut self) -> Option<Self::Item> {
+    //         self.rand_connection()
+    //     }
+    // }
 }
 mod game2 {
     use crate::engine::Map;
@@ -112,13 +112,13 @@ mod game2 {
         fn starting_location() -> Location {
             Location::MallEntrance
         }
-        fn rand_location(rng: &mut rand::prelude::ThreadRng) -> Location {
+        fn rand_location(_rng: &mut rand::prelude::ThreadRng) -> Location {
             Location::MallEntrance
         }
         fn connections(&self) -> Vec<Location> {
             vec![]
         }
-        fn rand_connection(&self, rng: &mut rand::prelude::ThreadRng) -> Option<Location> {
+        fn rand_connection(&self, _rng: &mut rand::prelude::ThreadRng) -> Option<Location> {
             None // TODO
         }
     }
@@ -139,69 +139,50 @@ fn main() {
     play_game2()
 }
 fn play_game1() {
+    use crate::engine::Creature;
     use crate::game1::*;
 
     let mut rng = rand::thread_rng();
-    let log = Log::new();
+    // let log = Log::new();
 
     let mut curr = Some(Location::starting_location());
     while let Some(loc) = curr {
         println!("{:?}", loc);
-        log.log(&format!("{:?}", loc));
+        // log.log(&format!("{:?}", loc));
         curr = loc.rand_connection(&mut rng);
     }
-    // while curr.is_some()
-    // curr = curr.rand_connection(&mut rng).unwrap_or_default();
 
-    // let map = Locations::new(game1::Location);
-    // let mut pos = EntityLocation::new(&map, Some(map.default()));
-    // let mut cs = CreatureState::new(&map);
+    let mut c1 = Creature::new(s!("Bob"));
+    c1.place(Location::starting_location());
 
-    // cs.next(&mut rng);
-    // puto!(cs.location);
-    // cs.next(&mut rng);
-    // puto!(cs.location);
-    // cs.next(&mut rng);
-    // puto!(cs.location);
+    while let Some(loc) = c1.location() {
+        println!("{} is at {:?}", c1.name(), loc);
+        c1.move_randomly(&mut rng);
+    }
 
-    // while pos.next().is_some() {
-    //     let p = pos.curr.clone().unwrap();
-    //     puto!(p);
-    //     log.log(&format!("{:?}", p));
-    // }
+    let mut c2 = Creature::new(s!("Ugg"));
+    c2.place(Location::starting_location());
+
+    while let Some(loc) = c2.location() {
+        println!("{} is at {:?}", c2.name(), loc);
+        c2.move_randomly(&mut rng);
+    }
 
     puts!("===FIN 1===");
-    puts!(log);
+    // puts!(log);
 }
 fn play_game2() {
     use crate::game2::*;
 
     let mut rng = rand::thread_rng();
-    let log = Log::new();
+    // let log = Log::new();
     let mut curr = Some(Location::starting_location());
     while let Some(loc) = curr {
         println!("{:?}", loc);
-        log.log(&format!("{:?}", loc));
+        // log.log(&format!("{:?}", loc));
         curr = loc.rand_connection(&mut rng);
     }
 
-    // let map = Locations::new(game2::Location::map());
-    // let mut pos = EntityLocation::new(&map, Some(map.default()));
-    // let mut cs = CreatureState::new(&map);
-
-    // cs.next(&mut rng);
-    // puto!(cs.location);
-    // cs.next(&mut rng);
-    // puto!(cs.location);
-    // cs.next(&mut rng);
-    // puto!(cs.location);
-
-    // while pos.next().is_some() {
-    //     let p = pos.curr.clone().unwrap();
-    //     puto!(p);
-    //     log.log(&format!("{:?}", p));
-    // }
-
     puts!("===FIN 2 ===");
-    puts!(log);
+    // puts!(log);
 }
