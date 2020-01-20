@@ -9,6 +9,20 @@ pub enum Disposition {
     Hostile,
 }
 
+pub trait Disposed {
+    fn disposition(&self) -> Disposition;
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct HP(pub u32);
+
+pub trait DefaultHP {
+    fn default_hp(&self) -> HP;
+    fn hp(&self) -> HP;
+    fn increase_hp(&mut self, by: HP) -> HP;
+    fn decrease_hp(&mut self, by: HP) -> HP;
+}
+
 #[derive(Debug)]
 pub enum Species {
     Human,
@@ -18,17 +32,17 @@ pub enum Species {
     Orc,
 }
 impl Species {
-    fn default_hp(&self) -> u32 {
+    pub fn default_hp(&self) -> HP {
         use Species::*;
         match self {
-            Human => 100,
-            Cow => 80,
-            Pig => 15,
-            Snake => 5,
-            Orc => 80,
+            Human => HP(100),
+            Cow => HP(80),
+            Pig => HP(15),
+            Snake => HP(5),
+            Orc => HP(80),
         }
     }
-    fn default_disposition(&self) -> Disposition {
+    pub fn default_disposition(&self) -> Disposition {
         use Disposition::*;
         use Species::*;
         match self {
@@ -53,8 +67,8 @@ where
     loc: Option<L>,
     rng: ThreadRng,
     disposition: Disposition,
-    species: Species,
-    hp: u32,
+    pub species: Species,
+    pub hp: HP,
 }
 
 impl<L> Creature<L>
@@ -104,9 +118,36 @@ where
     }
 }
 
-pub fn interact<L>(c1: &mut Creature<L>, c2: &mut Creature<L>)
-where
-    L: Map<L>,
-    L: Copy,
-{
+pub fn interact<C: Disposed + DefaultHP>(
+    c1: &mut C,
+    c2: &mut C,
+    rng: &mut rand::prelude::ThreadRng,
+) {
+    match (c1.disposition(), c2.disposition()) {
+        (Disposition::Hostile, Disposition::Hostile) => fight(c1, c2, rng),
+        (_, Disposition::Hostile) => {
+            if rand::random() {
+                fight(c1, c2, rng)
+            }
+        }
+        (Disposition::Hostile, _) => {
+            if rand::random() {
+                fight(c1, c2, rng)
+            }
+        }
+        _ => {}
+    }
+}
+use crate::rand::Rng;
+pub fn fight<T: DefaultHP>(c1: &mut T, c2: &mut T, rng: &mut rand::prelude::ThreadRng) {
+    // TODO: not all fights are to the death,
+    // TODO: nor are they this simple
+    // unimplemented!();
+    while c1.hp().0 > 0 && c2.hp().0 > 0 {
+        if rng.gen() {
+            c1.decrease_hp(HP(1));
+        } else {
+            c2.decrease_hp(HP(1));
+        }
+    }
 }
