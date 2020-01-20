@@ -10,14 +10,14 @@ extern crate rand;
 
 mod engine;
 
-use engine::creature_state::CreatureState;
-use engine::entity_locations::EntityLocation;
-use engine::locations::Locations;
+// use engine::creature_state::CreatureState;
+// use engine::entity_locations::EntityLocation;
+// use engine::locations::Locations;
 use engine::log::Log;
-// use rand::prelude::ThreadRng;
+use engine::Map;
 
 mod game1 {
-    use std::collections::HashMap;
+    use super::engine::Map;
 
     #[derive(Hash, Eq, Debug, PartialEq, Clone)]
     pub enum Location {
@@ -26,22 +26,62 @@ mod game1 {
         Garage,
         Driveway,
         SideDoor,
+        Couch,
         Nowhere,
     }
-    impl Location {
-        pub fn map() -> HashMap<Location, Vec<Location>> {
+
+    impl Map<Location> for Location {
+        fn starting_location() -> Location {
+            Location::Yard
+        }
+        fn rand_location(rng: &mut rand::prelude::ThreadRng) -> Location {
+            use crate::rand::Rng;
             use Location::*;
-            let mut map = HashMap::new();
-            map.insert(Yard, vec![FrontDoor, Garage]);
-            map.insert(FrontDoor, vec![Driveway, Garage]);
-            map.insert(Garage, vec![Driveway, FrontDoor, SideDoor]);
-            map.insert(SideDoor, vec![]);
-            map
+            match rng.gen_range(0, 6) {
+                0 => Yard,
+                1 => FrontDoor,
+                2 => Garage,
+                3 => Driveway,
+                4 => SideDoor,
+                5 => Couch,
+                _ => Nowhere,
+            }
+        }
+        fn connections(&self) -> Vec<Location> {
+            use Location::*;
+            match self {
+                Yard => vec![FrontDoor, Garage],
+                FrontDoor => vec![Driveway, Garage, Couch],
+                Couch => vec![],
+                Garage => vec![Driveway, FrontDoor, SideDoor],
+                Driveway => vec![Garage, FrontDoor],
+                SideDoor => vec![Garage, Driveway],
+                Nowhere => vec![],
+            }
+        }
+        fn rand_connection(&self, rng: &mut rand::prelude::ThreadRng) -> Option<Location> {
+            use rand::seq::SliceRandom;
+            match self.connections().choose(rng) {
+                Some(l) => Some(l.clone()),
+                None => None,
+            }
+        }
+    }
+    impl Default for Location {
+        fn default() -> Self {
+            Location::Nowhere
+        }
+    }
+    impl Iterator for Location {
+        type Item = Location;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            None
         }
     }
 }
-
 mod game2 {
+    use crate::engine::Map;
     use std::collections::HashMap;
 
     #[derive(Hash, Eq, Debug, PartialEq, Clone)]
@@ -68,55 +108,100 @@ mod game2 {
             map
         }
     }
+    impl Map<Location> for Location {
+        fn starting_location() -> Location {
+            Location::MallEntrance
+        }
+        fn rand_location(rng: &mut rand::prelude::ThreadRng) -> Location {
+            Location::MallEntrance
+        }
+        fn connections(&self) -> Vec<Location> {
+            vec![]
+        }
+        fn rand_connection(&self, rng: &mut rand::prelude::ThreadRng) -> Option<Location> {
+            None // TODO
+        }
+    }
+
+    impl Default for Location {
+        fn default() -> Self {
+            Location::Exit // Terminal Location
+        }
+    }
 }
 
 fn main() {
-    game1();
-    game2()
+    puts!("===GAME 1 ===");
+
+    play_game1();
+    puts!("===GAME 2 ===");
+
+    play_game2()
 }
-fn game1() {
+fn play_game1() {
+    use crate::game1::*;
+
     let mut rng = rand::thread_rng();
     let log = Log::new();
-    let map = Locations::new(game1::Location::map());
-    let mut pos = EntityLocation::new(&map, Some(map.default()));
-    let mut cs = CreatureState::new(&map);
 
-    cs.next(&mut rng);
-    puto!(cs.location);
-    cs.next(&mut rng);
-    puto!(cs.location);
-    cs.next(&mut rng);
-    puto!(cs.location);
-
-    while pos.next().is_some() {
-        let p = pos.curr.clone().unwrap();
-        puto!(p);
-        log.log(&format!("{:?}", p));
+    let mut curr = Some(Location::starting_location());
+    while let Some(loc) = curr {
+        println!("{:?}", loc);
+        log.log(&format!("{:?}", loc));
+        curr = loc.rand_connection(&mut rng);
     }
+    // while curr.is_some()
+    // curr = curr.rand_connection(&mut rng).unwrap_or_default();
 
-    puts!("===FIN===");
+    // let map = Locations::new(game1::Location);
+    // let mut pos = EntityLocation::new(&map, Some(map.default()));
+    // let mut cs = CreatureState::new(&map);
+
+    // cs.next(&mut rng);
+    // puto!(cs.location);
+    // cs.next(&mut rng);
+    // puto!(cs.location);
+    // cs.next(&mut rng);
+    // puto!(cs.location);
+
+    // while pos.next().is_some() {
+    //     let p = pos.curr.clone().unwrap();
+    //     puto!(p);
+    //     log.log(&format!("{:?}", p));
+    // }
+
+    puts!("===FIN 1===");
     puts!(log);
 }
-fn game2() {
+fn play_game2() {
+    use crate::game2::*;
+
     let mut rng = rand::thread_rng();
     let log = Log::new();
-    let map = Locations::new(game2::Location::map());
-    let mut pos = EntityLocation::new(&map, Some(map.default()));
-    let mut cs = CreatureState::new(&map);
-
-    cs.next(&mut rng);
-    puto!(cs.location);
-    cs.next(&mut rng);
-    puto!(cs.location);
-    cs.next(&mut rng);
-    puto!(cs.location);
-
-    while pos.next().is_some() {
-        let p = pos.curr.clone().unwrap();
-        puto!(p);
-        log.log(&format!("{:?}", p));
+    let mut curr = Some(Location::starting_location());
+    while let Some(loc) = curr {
+        println!("{:?}", loc);
+        log.log(&format!("{:?}", loc));
+        curr = loc.rand_connection(&mut rng);
     }
 
-    puts!("===FIN===");
+    // let map = Locations::new(game2::Location::map());
+    // let mut pos = EntityLocation::new(&map, Some(map.default()));
+    // let mut cs = CreatureState::new(&map);
+
+    // cs.next(&mut rng);
+    // puto!(cs.location);
+    // cs.next(&mut rng);
+    // puto!(cs.location);
+    // cs.next(&mut rng);
+    // puto!(cs.location);
+
+    // while pos.next().is_some() {
+    //     let p = pos.curr.clone().unwrap();
+    //     puto!(p);
+    //     log.log(&format!("{:?}", p));
+    // }
+
+    puts!("===FIN 2 ===");
     puts!(log);
 }
