@@ -4,16 +4,11 @@
 /// Game: Just to work through design decisions and refactorings
 ///
 /// TODO:
-/// [] Remove HashMap map ifo a fn with a exhaustive match (Make error states unrepresentable)
+/// [x] Remove HashMap map ifo a fn with a exhaustive match (Make error states unrepresentable)
+/// [] Create Creatures and make them interact
 ///
 extern crate rand;
-
 mod engine;
-
-// use engine::creature_state::CreatureState;
-// use engine::entity_locations::EntityLocation;
-// use engine::locations::Locations;
-// use engine::log::Log;
 use engine::Map;
 
 mod game1 {
@@ -72,13 +67,6 @@ mod game1 {
             Location::Nowhere
         }
     }
-    // impl Iterator for Location {
-    //     type Item = Location;
-
-    //     fn next(&mut self) -> Option<Self::Item> {
-    //         self.rand_connection()
-    //     }
-    // }
 }
 mod game2 {
     use crate::engine::Map;
@@ -139,7 +127,8 @@ fn main() {
     play_game2()
 }
 fn play_game1() {
-    use crate::engine::Creature;
+    use crate::engine::creatures;
+    use crate::engine::creatures::{Creature, Species};
     use crate::game1::*;
 
     let mut rng = rand::thread_rng();
@@ -152,7 +141,7 @@ fn play_game1() {
         curr = loc.rand_connection(&mut rng);
     }
 
-    let mut c1 = Creature::new(s!("Bob"));
+    let mut c1 = Creature::new(s!("Bob"), Species::Human);
     c1.place(Location::starting_location());
 
     while let Some(loc) = c1.location() {
@@ -160,7 +149,7 @@ fn play_game1() {
         c1.move_randomly(&mut rng);
     }
 
-    let mut c2 = Creature::new(s!("Ugg"));
+    let mut c2 = Creature::new(s!("Ugg"), Species::Orc);
     c2.place(Location::starting_location());
 
     while let Some(loc) = c2.location() {
@@ -168,9 +157,14 @@ fn play_game1() {
         c2.move_randomly(&mut rng);
     }
 
+    println!("BEFORE INTERACTION: \n  {:?}\n  {:?}", c1, c2);
+    creatures::interact(&mut c1, &mut c2);
+    println!("AFTER INTERACTION: \n  {:?}\n  {:?}", c1, c2);
+
     puts!("===FIN 1===");
     // puts!(log);
 }
+
 fn play_game2() {
     use crate::game2::*;
 
